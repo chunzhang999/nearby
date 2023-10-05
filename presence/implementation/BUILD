@@ -1,3 +1,5 @@
+load("@bazel_skylib//lib:selects.bzl", "selects")
+
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
-load("@bazel_skylib//lib:selects.bzl", "selects")
 
 licenses(["notice"])
 
@@ -143,8 +144,9 @@ cc_library(
     ],
     deps = [
         ":internal",
-        "//presence",
+        "//internal/platform/implementation:comm",
         "@com_github_protobuf_matchers//protobuf-matchers",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
 )
