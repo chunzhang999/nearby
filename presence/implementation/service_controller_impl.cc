@@ -14,14 +14,28 @@
 
 #include "presence/implementation/service_controller_impl.h"
 
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include "absl/status/statusor.h"
+#include "internal/platform/implementation/credential_callbacks.h"
 #include "presence/data_types.h"
+#include "presence/implementation/credential_manager.h"
+#include "presence/implementation/credential_manager_impl.h"
 
 namespace nearby {
 namespace presence {
+
+ServiceControllerImpl::ServiceControllerImpl()
+    : ServiceControllerImpl(
+          std::make_unique<CredentialManagerImpl>(&executor_)) {}
+
+ServiceControllerImpl::ServiceControllerImpl(
+    std::unique_ptr<CredentialManager> credential_manager)
+    : credential_manager_(std::move(credential_manager)),
+      scan_manager_(mediums_, *credential_manager_, executor_),
+      broadcast_manager_(mediums_, *credential_manager_, executor_) {}
 
 absl::StatusOr<ScanSessionId> ServiceControllerImpl::StartScan(
     ScanRequest scan_request, ScanCallback callback) {
@@ -47,7 +61,7 @@ void ServiceControllerImpl::UpdateLocalDeviceMetadata(
     const std::vector<nearby::internal::IdentityType>& identity_types,
     int credential_life_cycle_days, int contiguous_copy_of_credentials,
     GenerateCredentialsResultCallback credentials_generated_cb) {
-  credential_manager_.SetLocalDeviceMetadata(
+  credential_manager_->SetLocalDeviceMetadata(
       metadata, regen_credentials, manager_app_id, identity_types,
       credential_life_cycle_days, contiguous_copy_of_credentials,
       std::move(credentials_generated_cb));
@@ -56,7 +70,7 @@ void ServiceControllerImpl::UpdateLocalDeviceMetadata(
 void ServiceControllerImpl::GetLocalPublicCredentials(
     const CredentialSelector& credential_selector,
     GetPublicCredentialsResultCallback callback) {
-  credential_manager_.GetPublicCredentials(
+  credential_manager_->GetPublicCredentials(
       credential_selector, PublicCredentialType::kLocalPublicCredential,
       std::move(callback));
 }
@@ -65,9 +79,16 @@ void ServiceControllerImpl::UpdateRemotePublicCredentials(
     absl::string_view manager_app_id, absl::string_view account_name,
     const std::vector<nearby::internal::SharedCredential>& remote_public_creds,
     UpdateRemotePublicCredentialsCallback credentials_updated_cb) {
-  credential_manager_.UpdateRemotePublicCredentials(
+  credential_manager_->UpdateRemotePublicCredentials(
       manager_app_id, account_name, remote_public_creds,
       std::move(credentials_updated_cb));
+}
+
+void ServiceControllerImpl::GetLocalCredentials(
+    const CredentialSelector& credential_selector,
+    GetLocalCredentialsResultCallback callback) {
+  credential_manager_->GetLocalCredentials(credential_selector,
+                                           std::move(callback));
 }
 
 }  // namespace presence
