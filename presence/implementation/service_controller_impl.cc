@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
+#include "internal/platform/implementation/credential_callbacks.h"
 #include "presence/data_types.h"
 
 namespace nearby {
@@ -68,6 +69,13 @@ void ServiceControllerImpl::UpdateRemotePublicCredentials(
   credential_manager_.UpdateRemotePublicCredentials(
       manager_app_id, account_name, remote_public_creds,
       std::move(credentials_updated_cb));
+}
+
+void ServiceControllerImpl::GetLocalCredentials(
+    const CredentialSelector& credential_selector,
+    GetLocalCredentialsResultCallback callback) {
+  credential_manager_.GetLocalCredentials(credential_selector,
+                                          std::move(callback));
 }
 
 }  // namespace presence

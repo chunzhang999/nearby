@@ -65,6 +65,8 @@ class ServiceControllerImpl : public ServiceController {
       const std::vector<nearby::internal::SharedCredential>&
           remote_public_creds,
       UpdateRemotePublicCredentialsCallback credentials_updated_cb) override;
+  void GetLocalCredentials(const CredentialSelector& credential_selector,
+                           GetLocalCredentialsResultCallback callback) override;
 
   SingleThreadExecutor& GetBackgroundExecutor() { return executor_; }
 
