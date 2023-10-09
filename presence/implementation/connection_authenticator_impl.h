@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_NEARBY_PRESENCE_IMPLEMENTATION_CONNECTION_AUTHENTICATOR_H_
-#define THIRD_PARTY_NEARBY_PRESENCE_IMPLEMENTATION_CONNECTION_AUTHENTICATOR_H_
+#ifndef THIRD_PARTY_NEARBY_PRESENCE_IMPLEMENTATION_CONNECTION_AUTHENTICATOR_IMPL_H_
+#define THIRD_PARTY_NEARBY_PRESENCE_IMPLEMENTATION_CONNECTION_AUTHENTICATOR_IMPL_H_
 
 #include <optional>
-#include <string>
 #include <vector>
 
 #include "absl/status/status.h"
@@ -24,28 +23,15 @@
 #include "absl/strings/string_view.h"
 #include "internal/proto/credential.pb.h"
 #include "internal/proto/local_credential.pb.h"
+#include "presence/implementation/connection_authenticator.h"
 
 namespace nearby {
 namespace presence {
 
-class ConnectionAuthenticator {
+class ConnectionAuthenticatorImpl : public ConnectionAuthenticator {
  public:
-  struct OneWayInitiatorData {
-    std::string shared_credential_hash;
-  };
-
-  struct TwoWayInitiatorData {
-    std::string shared_credential_hash;
-    std::string private_key_signature;
-  };
-
-  struct ResponderData {
-    std::string private_key_signature;
-  };
-
-  using InitiatorData = absl::variant<OneWayInitiatorData, TwoWayInitiatorData>;
-
-  virtual ~ConnectionAuthenticator() = default;
+  ConnectionAuthenticatorImpl() = default;
+  ~ConnectionAuthenticatorImpl() override = default;
 
   // Builds a signed message to be returned to Nearby Connections for
   // authentication on the other side of the connection.
@@ -55,10 +41,10 @@ class ConnectionAuthenticator {
   //                    performing one-way authentication.
   // shared_credential - The shared credential used to decrypt the advertisement
   //                     from the remote device.
-  virtual absl::StatusOr<InitiatorData> BuildSignedMessageAsInitiator(
+  absl::StatusOr<InitiatorData> BuildSignedMessageAsInitiator(
       absl::string_view ukey2_secret,
       std::optional<const internal::LocalCredential> local_credential,
-      const internal::SharedCredential& shared_credential) const = 0;
+      const internal::SharedCredential& shared_credential) const override;
 
   // Builds a signed message to be returned to Nearby Connections for
   // authentication on the other side of the connection.
@@ -66,9 +52,9 @@ class ConnectionAuthenticator {
   // local_credential - The local credential used to sign the derived
   //                    information so the initiator can verify against our
   //                    shared credential.
-  virtual absl::StatusOr<ResponderData> BuildSignedMessageAsResponder(
+  absl::StatusOr<ResponderData> BuildSignedMessageAsResponder(
       absl::string_view ukey2_secret,
-      const internal::LocalCredential& local_credential) const = 0;
+      const internal::LocalCredential& local_credential) const override;
 
   // Verifies a signed message received from the responder (broadcaster) of the
   // Nearby Presence advertisement.
@@ -77,10 +63,10 @@ class ConnectionAuthenticator {
   // ukey2_secret - the shared secret derived from the ukey2 handshake in NC.
   // shared_credentials - the set of shared credentials that can be used to
   //     verify the responder data.
-  virtual absl::Status VerifyMessageAsInitiator(
+  absl::Status VerifyMessageAsInitiator(
       ResponderData authentication_data, absl::string_view ukey2_secret,
       const std::vector<internal::SharedCredential>& shared_credentials)
-      const = 0;
+      const override;
 
   // Verifies a signed message received from the Nearby Connections peer.
   // Returns absl::OkStatus() if the verification was successful.
@@ -90,14 +76,14 @@ class ConnectionAuthenticator {
   //                      required keyseed hash.
   // shared_credentials - The set of shared credentials that can be used to
   //                      verify the signed contents of the frame.
-  virtual absl::StatusOr<internal::LocalCredential> VerifyMessageAsResponder(
+  absl::StatusOr<internal::LocalCredential> VerifyMessageAsResponder(
       absl::string_view ukey2_secret, InitiatorData initiator_data,
       const std::vector<internal::LocalCredential>& local_credentials,
       const std::vector<internal::SharedCredential>& shared_credentials)
-      const = 0;
+      const override;
 };
 
 }  // namespace presence
 }  // namespace nearby
 
-#endif  // THIRD_PARTY_NEARBY_PRESENCE_IMPLEMENTATION_CONNECTION_AUTHENTICATOR_H_
+#endif  // THIRD_PARTY_NEARBY_PRESENCE_IMPLEMENTATION_CONNECTION_AUTHENTICATOR_IMPL_H_

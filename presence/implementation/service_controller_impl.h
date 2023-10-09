@@ -20,9 +20,10 @@
 #include <utility>
 
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "internal/proto/metadata.pb.h"
 #include "presence/implementation/broadcast_manager.h"
-#include "presence/implementation/credential_manager_impl.h"
+#include "presence/implementation/credential_manager.h"
 #include "presence/implementation/mediums/mediums.h"
 #include "presence/implementation/scan_manager.h"
 #include "presence/implementation/service_controller.h"
@@ -39,6 +40,7 @@ class ServiceControllerImpl : public ServiceController {
  public:
   using SingleThreadExecutor = ::nearby::SingleThreadExecutor;
 
+  ServiceControllerImpl();
   ~ServiceControllerImpl() override { executor_.Shutdown(); }
 
   absl::StatusOr<ScanSessionId> StartScan(ScanRequest scan_request,
@@ -55,7 +57,7 @@ class ServiceControllerImpl : public ServiceController {
       GenerateCredentialsResultCallback credentials_generated_cb) override;
 
   ::nearby::internal::Metadata GetLocalDeviceMetadata() override {
-    return credential_manager_.GetLocalDeviceMetadata();
+    return credential_manager_->GetLocalDeviceMetadata();
   }
   void GetLocalPublicCredentials(
       const CredentialSelector& credential_selector,
@@ -65,11 +67,18 @@ class ServiceControllerImpl : public ServiceController {
       const std::vector<nearby::internal::SharedCredential>&
           remote_public_creds,
       UpdateRemotePublicCredentialsCallback credentials_updated_cb) override;
+  void GetLocalCredentials(const CredentialSelector& credential_selector,
+                           GetLocalCredentialsResultCallback callback) override;
 
   SingleThreadExecutor& GetBackgroundExecutor() { return executor_; }
 
   // Gives tests access to mediums.
   Mediums& GetMediums() { return mediums_; }
+
+ protected:
+  // Inject `CredentialManager` to be used for testing.
+  explicit ServiceControllerImpl(
+      std::unique_ptr<CredentialManager> credential_manager);
 
  private:
   SingleThreadExecutor executor_;
@@ -78,11 +87,10 @@ class ServiceControllerImpl : public ServiceController {
     executor_.Execute(std::string(name), std::move(runnable));
   }
   Mediums mediums_;  // NOLINT: further impl will use it.
-  CredentialManagerImpl credential_manager_{
-      &executor_};  // NOLINT: further impl will use it.
-  ScanManager scan_manager_{mediums_, credential_manager_,
-                            executor_};  // NOLINT: further impl will use it.
-  BroadcastManager broadcast_manager_{mediums_, credential_manager_, executor_};
+  std::unique_ptr<CredentialManager>
+      credential_manager_;    // NOLINT: further impl will use it.
+  ScanManager scan_manager_;  // NOLINT: further impl will use it.
+  BroadcastManager broadcast_manager_;
 };
 
 }  // namespace presence

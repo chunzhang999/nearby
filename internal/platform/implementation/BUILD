@@ -89,6 +89,7 @@ cc_library(
         "//internal/network:__subpackages__",
         "//internal/platform:__pkg__",
         "//internal/platform/implementation:__subpackages__",
+        "//presence:__subpackages__",
         "//presence/implementation:__subpackages__",
     ],
     deps = [
