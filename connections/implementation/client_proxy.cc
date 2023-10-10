@@ -523,6 +523,11 @@ BooleanMediumSelector ClientProxy::GetUpgradeMediums(
   return {};
 }
 
+bool ClientProxy::IsDiscoveredEndpoint(const std::string& endpoint_id) const {
+  MutexLock lock(&mutex_);
+  return discovered_endpoint_ids_.contains(endpoint_id);
+}
+
 bool ClientProxy::Is5GHzSupported(const std::string& endpoint_id) const {
   MutexLock lock(&mutex_);
 

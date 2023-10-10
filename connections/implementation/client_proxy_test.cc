@@ -1183,6 +1183,15 @@ TEST_F(ClientProxyTest, TestAutoBwuWhenListeningWithAutoBwu) {
   EXPECT_TRUE(client1_.AutoUpgradeBandwidth());
 }
 
+TEST_F(ClientProxyTest, TestIsDiscoveredEndpoint) {
+  Endpoint advertising_endpoint =
+      StartAdvertising(&client1_, advertising_connection_listener_);
+  StartDiscovery(&client2_, GetDiscoveryListener());
+  EXPECT_FALSE(client2_.IsDiscoveredEndpoint(advertising_endpoint.id));
+  OnDiscoveryEndpointFound(&client2_, advertising_endpoint);
+  EXPECT_TRUE(client2_.IsDiscoveredEndpoint(advertising_endpoint.id));
+}
+
 }  // namespace
 }  // namespace connections
 }  // namespace nearby
